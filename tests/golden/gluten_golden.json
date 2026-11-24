@@ -1,0 +1,36 @@
+{
+  "_description": "Golden dataset for the gluten verification tool. Each case is the expected classification under the destination country's law. Changing a rule that alters any outcome is a regression unless this file is deliberately updated in the same change.",
+  "catalogue_expectations": {
+    "au-p1": "VERIFIED", "au-p2": "EXCLUDED", "au-p3": "VERIFIED", "au-p4": "VERIFIED", "au-p5": "EXCLUDED", "au-p6": "NEEDS_CLARIFICATION",
+    "gb-p1": "VERIFIED", "gb-p2": "VERIFIED", "gb-p3": "NEEDS_CLARIFICATION", "gb-p4": "VERIFIED", "gb-p5": "VERIFIED",
+    "ca-p1": "VERIFIED", "ca-p2": "EXCLUDED", "ca-p3": "VERIFIED", "ca-p4": "NEEDS_CLARIFICATION", "ca-p5": "VERIFIED",
+    "sg-p1": "VERIFIED", "sg-p2": "VERIFIED", "sg-p3": "NEEDS_CLARIFICATION", "sg-p4": "NEEDS_CLARIFICATION", "sg-p5": "EXCLUDED",
+    "de-p1": "VERIFIED", "de-p2": "VERIFIED", "de-p3": "VERIFIED", "de-p4": "EXCLUDED"
+  },
+  "edge_cases": [
+    {"id": "buckwheat_is_safe", "country_code": "GB", "ingredients": ["buckwheat flour", "salt"], "expected": "VERIFIED"},
+    {"id": "gf_oats_ok_in_uk", "country_code": "GB", "ingredients": ["gluten-free oats"], "expected": "VERIFIED"},
+    {"id": "gf_oats_banned_in_au", "country_code": "AU", "ingredients": ["gluten-free oats"], "expected": "EXCLUDED"},
+    {"id": "gf_oats_banned_in_nz", "country_code": "NZ", "ingredients": ["gluten free oats"], "expected": "EXCLUDED"},
+    {"id": "plain_oats_need_clarification_ca", "country_code": "CA", "ingredients": ["oats", "honey"], "expected": "NEEDS_CLARIFICATION"},
+    {"id": "gf_wheat_starch_ok_in_eu", "country_code": "FR", "ingredients": ["gluten-free wheat starch", "rice flour"], "expected": "VERIFIED"},
+    {"id": "gf_wheat_starch_banned_in_au", "country_code": "AU", "ingredients": ["gluten-free wheat starch", "rice flour"], "expected": "EXCLUDED"},
+    {"id": "gf_wheat_starch_banned_in_ca", "country_code": "CA", "ingredients": ["gluten free wheat starch"], "expected": "EXCLUDED"},
+    {"id": "gf_wheat_starch_unclear_in_sg", "country_code": "SG", "ingredients": ["gluten free wheat starch"], "expected": "NEEDS_CLARIFICATION"},
+    {"id": "malt_vinegar_banned_au", "country_code": "AU", "ingredients": ["potato", "malt vinegar"], "expected": "EXCLUDED"},
+    {"id": "malt_vinegar_unclear_gb", "country_code": "GB", "ingredients": ["potato", "malt vinegar"], "expected": "NEEDS_CLARIFICATION"},
+    {"id": "barley_malt_extract", "country_code": "IE", "ingredients": ["rice", "barley malt extract"], "expected": "EXCLUDED"},
+    {"id": "spelt_is_wheat", "country_code": "DE", "ingredients": ["spelt flour"], "expected": "EXCLUDED"},
+    {"id": "semolina_is_wheat", "country_code": "GB", "ingredients": ["durum wheat semolina"], "expected": "EXCLUDED"},
+    {"id": "unspecified_flour", "country_code": "GB", "ingredients": ["flour", "sugar"], "expected": "NEEDS_CLARIFICATION"},
+    {"id": "unspecified_modified_starch", "country_code": "CA", "ingredients": ["modified starch", "water"], "expected": "NEEDS_CLARIFICATION"},
+    {"id": "qualified_modified_starch", "country_code": "CA", "ingredients": ["modified starch (maize)", "water"], "expected": "VERIFIED"},
+    {"id": "soy_sauce_ambiguous", "country_code": "SG", "ingredients": ["rice", "soy sauce"], "expected": "NEEDS_CLARIFICATION"},
+    {"id": "glucose_syrup_ok", "country_code": "AU", "ingredients": ["maize starch", "glucose syrup"], "expected": "VERIFIED"},
+    {"id": "goat_milk_is_not_oats", "country_code": "AU", "ingredients": ["goat milk", "rice"], "expected": "VERIFIED"},
+    {"id": "rice_malt_syrup_ok", "country_code": "AU", "ingredients": ["rice malt syrup", "puffed rice"], "expected": "VERIFIED"},
+    {"id": "certification_does_not_override_wheat", "country_code": "GB", "ingredients": ["wheat flour"], "certifications": ["Crossed Grain"], "expected": "EXCLUDED"},
+    {"id": "may_contain_gluten", "country_code": "CA", "ingredients": ["corn"], "may_contain": "May contain wheat and barley", "expected": "NEEDS_CLARIFICATION"},
+    {"id": "contains_statement_gluten", "country_code": "GB", "ingredients": ["corn", "flavouring"], "allergen_statement": "Contains: barley", "expected": "EXCLUDED"}
+  ]
+}

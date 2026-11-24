@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-test:
+    name: Lint, unit, security & integration tests (offline)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Lint (ruff incl. bandit security rules)
+        run: ruff check .
+      - name: Tests (golden dataset, guardrails, PII, HITL, wiring)
+        run: pytest -q
+      - name: Dependency vulnerability audit (runtime dependencies)
+        run: pip-audit -r gf_agent/requirements.txt --progress-spinner off
+
+  secret-scan:
+    name: Secret scanning (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  terraform:
+    name: Terraform fmt & validate
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra/terraform
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+      - run: terraform fmt -check -recursive
+      - run: terraform init -backend=false -input=false
+      - run: terraform validate
+
+  live-eval:
+    name: Agent evaluation (golden eval set, live Gemini)
+    needs: [lint-and-test]
+    # Runs only on main and only once WIF variables are configured.
+    if: github.ref == 'refs/heads/main' && vars.GCP_WORKLOAD_IDENTITY_PROVIDER != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # short-lived OIDC token for Workload Identity Federation
+    env:
+      GOOGLE_GENAI_USE_VERTEXAI: "TRUE"
+      GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
+      GOOGLE_CLOUD_LOCATION: ${{ vars.GCP_REGION }}
+      GF_RUN_LIVE_EVALS: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_CI_SERVICE_ACCOUNT }}
+      - run: pip install -e ".[dev]"
+      - name: Run ADK evaluation suite
+        run: pytest -q -m live tests/eval

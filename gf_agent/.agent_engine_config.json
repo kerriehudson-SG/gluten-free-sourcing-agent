@@ -1,0 +1,12 @@
+{
+  "env_vars": {
+    "GOOGLE_GENAI_USE_VERTEXAI": "TRUE",
+    "GF_MODEL_LITE": "gemini-2.5-flash-lite",
+    "GF_MODEL_FAST": "gemini-3.5-flash",
+    "GF_MODEL_PRO": "gemini-3.1-pro-preview",
+    "GF_ENABLE_CLOUD_DLP": "true",
+    "GF_PII_SALT_SECRET_ID": "gf-agent-pii-hash-salt",
+    "GF_LOG_LEVEL": "INFO",
+    "ADK_CAPTURE_MESSAGE_CONTENT_IN_SPANS": "false"
+  }
+}

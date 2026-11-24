@@ -1,0 +1,12 @@
+# Runtime dependencies installed into the Agent Runtime container by `adk deploy agent_engine`.
+google-adk>=2.15,<3
+google-cloud-aiplatform[agent_engines]>=2.10
+google-cloud-secret-manager>=2.32
+google-cloud-dlp>=3.40
+opentelemetry-exporter-gcp-trace>=1.15
+structlog>=26.1
+httpx>=0.28
+pydantic>=2.14
+sqlalchemy>=2.1
+aiosqlite>=0.22
+greenlet>=3.1

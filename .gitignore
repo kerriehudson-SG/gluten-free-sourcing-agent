@@ -1,0 +1,42 @@
+# Secrets and local config - NEVER commit
+.env
+.env.*
+!.env.example
+*-key.json
+*.pem
+credentials*.json
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!terraform.tfvars.example
+.terraform.lock.hcl.bak
+crash.log
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+.coverage
+htmlcov/
+
+# Local agent state
+.gf_sessions.db
+*.db
+.adk/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Agents CLI eval artifacts
+artifacts/

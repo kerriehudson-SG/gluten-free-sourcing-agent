@@ -1,0 +1,100 @@
+name: Deploy to Agent Runtime
+
+# Manual trigger only, main branch only. Credentials are issued ONLY to the
+# `deploy` job, which runs in the protected "production" GitHub Environment:
+# a named reviewer must click "Approve" first (human-in-the-loop release gate).
+on:
+  workflow_dispatch:
+    inputs:
+      agent_engine_id:
+        description: "Existing Agent Runtime numeric ID to update (blank = create new)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  quality-gate:
+    name: Quality gate (no cloud credentials)
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - run: ruff check .
+      - run: pytest -q
+
+  deploy:
+    name: Deploy (after human approval)
+    needs: [quality-gate]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      GOOGLE_GENAI_USE_VERTEXAI: "TRUE"
+      GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
+      GOOGLE_CLOUD_LOCATION: ${{ vars.GCP_REGION }}
+      RUNTIME_SA: ${{ vars.GCP_RUNTIME_SERVICE_ACCOUNT }}
+      ARMOR_TEMPLATE: ${{ vars.GF_MODEL_ARMOR_TEMPLATE }}
+      AE_ID: ${{ inputs.agent_engine_id }} # untrusted input: passed via env, validated below
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Validate inputs
+        run: |
+          if [[ -n "$AE_ID" && ! "$AE_ID" =~ ^[0-9]{1,25}$ ]]; then
+            echo "agent_engine_id must be numeric"; exit 1
+          fi
+      - name: Install runtime dependencies only
+        run: pip install -r gf_agent/requirements.txt
+      - name: Inject non-secret runtime settings into deploy config
+        run: |
+          python - <<'PY'
+          import json, os
+          p = "gf_agent/.agent_engine_config.json"
+          cfg = json.load(open(p))
+          if os.environ.get("ARMOR_TEMPLATE"):
+              cfg["env_vars"]["GF_MODEL_ARMOR_TEMPLATE"] = os.environ["ARMOR_TEMPLATE"]
+          json.dump(cfg, open(p, "w"), indent=2)
+          PY
+      - name: Authenticate (Workload Identity Federation, no keys)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      - name: Deploy with ADK CLI
+        id: deploy
+        run: |
+          ARGS=(--project "$GOOGLE_CLOUD_PROJECT" --region "$GOOGLE_CLOUD_LOCATION"
+                --display_name "gf-sourcing-agent"
+                --description "Gluten-free sourcing multi-agent system"
+                --service_account "$RUNTIME_SA"
+                --otel_to_cloud)
+          if [[ -n "$AE_ID" ]]; then ARGS+=(--agent_engine_id "$AE_ID"); fi
+          adk deploy agent_engine "${ARGS[@]}" gf_agent 2>&1 | tee deploy.log
+          ID=$(grep -oE 'reasoningEngines/[0-9]+' deploy.log | tail -1 | cut -d/ -f2)
+          ID="${ID:-$AE_ID}"
+          [[ "$ID" =~ ^[0-9]+$ ]] || { echo "Could not determine Agent Engine ID"; exit 1; }
+          echo "agent_engine_id=$ID" >> "$GITHUB_OUTPUT"
+          echo "### Deployed Agent Engine ID: $ID" >> "$GITHUB_STEP_SUMMARY"
+      - name: Smoke test deployed agent
+        env:
+          DEPLOYED_ID: ${{ steps.deploy.outputs.agent_engine_id }}
+        run: |
+          python scripts/smoke_test.py --project "$GOOGLE_CLOUD_PROJECT" \
+            --location "$GOOGLE_CLOUD_LOCATION" --agent-engine-id "$DEPLOYED_ID"

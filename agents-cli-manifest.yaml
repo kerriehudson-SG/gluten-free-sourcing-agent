@@ -1,0 +1,18 @@
+# Agents CLI (google-agents-cli) project manifest.
+# Lets the course toolchain operate on this repo:
+#   agents-cli info | lint | playground | run "<prompt>" | deploy
+name: gluten-free-sourcing-agent
+language: python
+framework: google-adk
+base_template: adk_python
+agent_directory: gf_agent
+region: us-central1
+create_params:
+  app_name: gf_agent
+  root_agent_name: gf_coordinator
+  deployment_target: agent_runtime
+  session_type: agent_engine
+  cicd_runner: skip
+  agent_guidance_filename: AGENTS.md
+  agent_runtime:
+    identity_default: service_account

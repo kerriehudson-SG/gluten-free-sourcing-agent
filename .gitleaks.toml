@@ -1,0 +1,11 @@
+# Extend the default gitleaks rules; allowlist synthetic PII fixtures used by
+# the privacy tests (fake emails, test card 4111..., example NRIC).
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Synthetic test fixtures"
+paths = [
+  '''tests/security/test_pii_redaction\.py''',
+  '''tests/security/test_no_hardcoded_secrets\.py''',
+]

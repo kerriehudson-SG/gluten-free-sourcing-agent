@@ -1,0 +1,62 @@
+[project]
+name = "gf-sourcing-agent"
+version = "1.0.0"
+description = "Multi-agent ADK system that finds healthy, truly gluten-free products and the most cost-effective group purchase options for a country."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.11"
+dependencies = [
+  "google-adk>=2.15,<3",
+  "google-cloud-aiplatform[agent_engines]>=2.10",
+  "google-cloud-secret-manager>=2.32",
+  "google-cloud-dlp>=3.40",
+  "opentelemetry-exporter-gcp-trace>=1.15",
+  "structlog>=26.1",
+  "httpx>=0.28",
+  "pydantic>=2.14",
+  "sqlalchemy>=2.1",
+  "aiosqlite>=0.22",
+  "greenlet>=3.1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=9.2",
+  "pytest-asyncio>=1.5",
+  "ruff>=0.17",
+  "pip-audit>=2.9",
+  "pre-commit>=4.0",
+  "pyyaml>=6.0",
+  "google-agents-cli>=1.15",
+]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["gf_agent*"]
+
+[tool.setuptools.package-data]
+gf_agent = ["data/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+  "live: requires Google Cloud credentials and calls Gemini (run with GF_RUN_LIVE_EVALS=1)",
+]
+filterwarnings = ["ignore::DeprecationWarning", "ignore::UserWarning"]
+
+[tool.ruff]
+line-length = 100
+indent-width = 2
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "S", "I"]
+ignore = ["E501", "S101", "B008"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "B"]
