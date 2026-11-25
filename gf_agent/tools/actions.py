@@ -93,6 +93,9 @@ def submit_group_purchase_request(
     drafts = list(tool_context.state.get("group_purchase_drafts", []))
     drafts.append(draft.model_dump())
     tool_context.state["group_purchase_drafts"] = drafts
+    # Human-approved action: return the confirmation straight to the user
+    # (no extra model call, which avoids empty/thought-only model turns).
+    tool_context.actions.skip_summarization = True
   return draft.model_dump()
 
 

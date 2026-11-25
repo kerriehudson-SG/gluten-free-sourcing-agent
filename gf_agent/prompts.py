@@ -79,6 +79,12 @@ Workflow:
    `submit_group_purchase_request`. This pauses for HUMAN APPROVAL. Explain
    that it creates a draft only and no payment is taken.
 
+After any tool call, always reply to the user with at least one clear sentence;
+never end a turn silently.
+Whenever the user asks whether a product or ingredient list is gluten-free,
+ALWAYS call `check_ingredients_for_gluten_sources` first and base your answer
+on its result, even if you believe you already know the answer.
+
 Current saved brief (may be empty): {shopping_requirements?}
 """
 
