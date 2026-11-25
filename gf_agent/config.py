@@ -34,7 +34,7 @@ class ModelRouting:
   """Maps agent roles to Gemini models by task complexity."""
 
   # Fast, low-cost: high-volume routing, extraction, arithmetic summaries.
-  lite: str = os.getenv("GF_MODEL_LITE", "gemini-2.5-flash-lite")
+  lite: str = os.getenv("GF_MODEL_LITE", "gemini-3.5-flash-lite")
   # Balanced: conversational coordination, tool use, search, critique.
   fast: str = os.getenv("GF_MODEL_FAST", "gemini-3.5-flash")
   # Strongest reasoning: safety-critical gluten judgement and final synthesis.
@@ -66,6 +66,31 @@ ROLE_TO_TIER: dict[str, str] = {
 }
 
 MODEL_ROUTING = ModelRouting()
+
+
+def gemini(model_name: str):
+  """Builds a Gemini model whose API calls go to the model location.
+
+  Gemini models in this project are served from the `global` location, while
+  Agent Runtime, Sessions, Memory Bank and logs stay regional (us-central1).
+  `client_kwargs` pins only the model calls to GF_MODEL_LOCATION and forces
+  Vertex AI (enterprise) mode, so no API key is ever used.
+
+  Args:
+    model_name: Gemini model name, e.g. "gemini-3.5-flash".
+
+  Returns:
+    An ADK Gemini model instance.
+  """
+  from google.adk.models.google_llm import Gemini  # pylint: disable=import-outside-toplevel
+
+  return Gemini(
+      model=model_name,
+      client_kwargs={
+          "enterprise": True,
+          "location": os.getenv("GF_MODEL_LOCATION", "global"),
+      },
+  )
 
 _COUNTRY_WORDS = (
     "australia", "new zealand", "united kingdom", " uk ", "britain", "england",

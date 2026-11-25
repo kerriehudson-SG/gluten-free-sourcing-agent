@@ -67,12 +67,12 @@ def test_coordinator_uses_pipeline_as_tool():
     (A.report_critic_agent, "fast"),
 ])
 def test_strategic_model_routing(agent, tier):
-  assert agent.model == getattr(MODEL_ROUTING, tier)
+  assert agent.model.model == getattr(MODEL_ROUTING, tier)
 
 
 def test_safety_critical_agent_uses_strongest_model_and_zero_temperature():
   a = A.gluten_verification_agent
-  assert a.model == MODEL_ROUTING.pro
+  assert a.model.model == MODEL_ROUTING.pro
   assert a.generate_content_config.temperature == 0.0
 
 
@@ -201,3 +201,10 @@ def test_agents_cli_manifest_points_at_this_agent():
   assert m["agent_directory"] == "gf_agent"
   assert m["create_params"]["deployment_target"] == "agent_runtime"
   assert m["create_params"]["root_agent_name"] == A.root_agent.name
+
+
+def test_model_calls_use_vertex_ai_global_location():
+  for a in [A.root_agent, A.gluten_verification_agent, A.cost_analysis_agent,
+            A.report_writer_agent]:
+    assert a.model.client_kwargs["enterprise"] is True, "Vertex AI only, never API keys"
+    assert a.model.client_kwargs["location"] == "global"

@@ -33,7 +33,6 @@ from google.adk.agents.context_cache_config import ContextCacheConfig
 from google.adk.apps import App
 from google.adk.apps.app import EventsCompactionConfig
 from google.adk.apps.llm_event_summarizer import LlmEventSummarizer
-from google.adk.models.google_llm import Gemini
 from google.adk.tools import exit_loop
 from google.adk.tools.agent_tool import AgentTool
 from google.adk.tools.google_search_tool import google_search
@@ -41,7 +40,7 @@ from google.adk.tools.preload_memory_tool import PreloadMemoryTool
 from google.genai import types
 
 from gf_agent import prompts
-from gf_agent.config import MODEL_ROUTING, get_settings
+from gf_agent.config import MODEL_ROUTING, gemini, get_settings
 from gf_agent.memory import AsyncMemoryPlugin
 from gf_agent.observability.logging import configure_logging
 from gf_agent.observability.tracing import init_tracing
@@ -82,7 +81,7 @@ def _sourcing_tools() -> list:
     # Built-in google_search must live in its own agent; expose it as a tool.
     live_search_agent = LlmAgent(
         name="live_retailer_search_agent",
-        model=MODEL_ROUTING.for_role("live_search"),
+        model=gemini(MODEL_ROUTING.for_role("live_search")),
         description="Finds real gluten-free grocery retailers in a country via Google Search.",
         instruction=prompts.LIVE_SEARCH_INSTRUCTION,
         tools=[google_search],
@@ -93,7 +92,7 @@ def _sourcing_tools() -> list:
 
 sourcing_agent = LlmAgent(
     name="sourcing_agent",
-    model=MODEL_ROUTING.for_role("sourcing"),
+    model=gemini(MODEL_ROUTING.for_role("sourcing")),
     description="Finds retailers and candidate gluten-free products for a country.",
     instruction=prompts.SOURCING_INSTRUCTION,
     tools=_sourcing_tools(),
@@ -103,7 +102,7 @@ sourcing_agent = LlmAgent(
 
 gluten_verification_agent = LlmAgent(
     name="gluten_verification_agent",
-    model=MODEL_ROUTING.for_role("gluten_verification"),
+    model=gemini(MODEL_ROUTING.for_role("gluten_verification")),
     description="Independently verifies each product is gluten-free under the country's law.",
     instruction=prompts.GLUTEN_VERIFICATION_INSTRUCTION,
     tools=[check_ingredients_for_gluten_sources, lookup_product_label_by_barcode],
@@ -113,7 +112,7 @@ gluten_verification_agent = LlmAgent(
 
 health_assessment_agent = LlmAgent(
     name="health_assessment_agent",
-    model=MODEL_ROUTING.for_role("health_assessment"),
+    model=gemini(MODEL_ROUTING.for_role("health_assessment")),
     description="Scores healthiness against cited national nutrition standards.",
     instruction=prompts.HEALTH_ASSESSMENT_INSTRUCTION,
     tools=[assess_nutrition_against_national_standard],
@@ -123,7 +122,7 @@ health_assessment_agent = LlmAgent(
 
 cost_analysis_agent = LlmAgent(
     name="cost_analysis_agent",
-    model=MODEL_ROUTING.for_role("cost_analysis"),
+    model=gemini(MODEL_ROUTING.for_role("cost_analysis")),
     description="Ranks verified products by cost effectiveness and group-buy options.",
     instruction=prompts.COST_ANALYSIS_INSTRUCTION,
     tools=[rank_products_by_cost_effectiveness, calculate_group_purchase_options],
@@ -133,7 +132,7 @@ cost_analysis_agent = LlmAgent(
 
 report_writer_agent = LlmAgent(
     name="report_writer_agent",
-    model=MODEL_ROUTING.for_role("report_writer"),
+    model=gemini(MODEL_ROUTING.for_role("report_writer")),
     description="Synthesises specialist outputs into a structured, cited report.",
     instruction=prompts.REPORT_WRITER_INSTRUCTION,
     output_schema=FinalReport,
@@ -143,7 +142,7 @@ report_writer_agent = LlmAgent(
 
 report_critic_agent = LlmAgent(
     name="report_critic_agent",
-    model=MODEL_ROUTING.for_role("report_critic"),
+    model=gemini(MODEL_ROUTING.for_role("report_critic")),
     description="Self-evaluation guardrail: checks the report for safety and completeness.",
     instruction=prompts.REPORT_CRITIC_INSTRUCTION,
     tools=[exit_loop],
@@ -186,7 +185,7 @@ gf_sourcing_pipeline = SequentialAgent(
 
 root_agent = LlmAgent(
     name="gf_coordinator",
-    model=MODEL_ROUTING.for_role("coordinator"),
+    model=gemini(MODEL_ROUTING.for_role("coordinator")),
     description="Coordinator for gluten-free sourcing, verification, health and cost.",
     instruction=prompts.COORDINATOR_INSTRUCTION,
     tools=[
@@ -223,7 +222,7 @@ app = App(
         overlap_size=1,
         token_threshold=60_000,
         event_retention_size=10,
-        summarizer=LlmEventSummarizer(llm=Gemini(model=MODEL_ROUTING.lite)),
+        summarizer=LlmEventSummarizer(llm=gemini(MODEL_ROUTING.lite)),
     ),
     context_cache_config=ContextCacheConfig(
         min_tokens=4096, ttl_seconds=1800, cache_intervals=10

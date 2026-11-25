@@ -38,7 +38,7 @@ overridable via `GF_MODEL_LITE/FAST/PRO`.
 
 | Tier | Default | Used for | Rationale |
 |---|---|---|---|
-| lite | `gemini-2.5-flash-lite` | cost analysis, history compaction summaries | Tools do the arithmetic; cheapest and fastest |
+| lite | `gemini-3.5-flash-lite` | cost analysis, history compaction summaries | Tools do the arithmetic; cheapest and fastest |
 | fast | `gemini-3.5-flash` | coordinator, sourcing, health, critic, live search | Good tool calling and dialogue at low latency |
 | pro | `gemini-3.1-pro-preview` | gluten verification, report synthesis | Safety-critical judgement and long-context synthesis; a false negative can harm a coeliac |
 
@@ -46,6 +46,8 @@ overridable via `GF_MODEL_LITE/FAST/PRO`.
 escalates the coordinator to the pro model for multi-country comparisons or
 very long briefs (`config.choose_model_for_request`). Every decision is logged
 as `model_route` with `configured_model`, `routed_model` and `reason`.
+
+Model calls are pinned to the `global` location via `config.gemini()` (`client_kwargs`), while Agent Runtime, Sessions, Memory Bank and logs remain in `us-central1`.
 
 ## Context and memory
 | Concern | Mechanism |

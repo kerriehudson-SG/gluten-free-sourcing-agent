@@ -23,7 +23,7 @@ evalset: ## Regenerate the golden ADK eval set JSON
 	python scripts/build_evalset.py
 
 eval-live: ## Live ADK evaluation against Gemini (needs gcloud auth)
-	adk eval gf_agent tests/eval/gf_agent.evalset.json --config_file_path tests/eval/test_config.json --print_detailed_results
+	GOOGLE_CLOUD_LOCATION=global GOOGLE_GENAI_USE_ENTERPRISE=TRUE adk eval gf_agent tests/eval/gf_agent.evalset.json --config_file_path tests/eval/test_config.json --print_detailed_results
 
 web: ## Local ADK web UI (HITL approval dialog appears in the UI)
 	adk web --port 8080

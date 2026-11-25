@@ -69,7 +69,8 @@ jobs:
     env:
       GOOGLE_GENAI_USE_VERTEXAI: "TRUE"
       GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
-      GOOGLE_CLOUD_LOCATION: ${{ vars.GCP_REGION }}
+      GOOGLE_CLOUD_LOCATION: global # Gemini (incl. eval judge) is served from global
+      GOOGLE_GENAI_USE_ENTERPRISE: "TRUE"
       GF_RUN_LIVE_EVALS: "1"
     steps:
       - uses: actions/checkout@v4
