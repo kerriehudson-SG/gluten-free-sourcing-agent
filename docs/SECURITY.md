@@ -26,8 +26,8 @@
 | `gf-agent-deployer` | `aiplatform.user`, `serviceusage.serviceUsageConsumer` | project | Deploy workflow |
 | | `iam.serviceAccountUser` | **runtime SA only** | Attach runtime identity |
 | WIF provider | `attribute_condition = repository == '<owner/repo>' && ref == 'refs/heads/main'` | pool | GitHub OIDC; PR jobs never get cloud credentials |
-| CI WIF binding | subject `repo:<owner/repo>:ref:refs/heads/main` | SA | Live evals |
-| Deployer WIF binding | subject `repo:<owner/repo>:environment:production` | SA | Only after a human approves in GitHub |
+| CI WIF binding | `principalSet` on `attribute.repository` (provider only accepts this repo's `main`) | SA | Live evals |
+| Deployer WIF binding | **separate pool** whose provider requires repo + `main` + `environment == production` | SA | Only after a human approves in GitHub |
 | Optional | `iam.serviceAccountTokenCreator` for the Agent Runtime service agent on the runtime SA | runtime SA only | Enabled only if the first deploy requires it |
 
 **Why `aiplatform.user` for runtime and deployer:** Agent Runtime Sessions,

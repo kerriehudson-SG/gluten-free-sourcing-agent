@@ -22,3 +22,8 @@ output "pii_salt_secret" {
   description = "Secret ID to populate out-of-band."
   value       = google_secret_manager_secret.pii_salt.secret_id
 }
+
+output "deploy_workload_identity_provider" {
+  description = "GitHub variable GCP_DEPLOY_WORKLOAD_IDENTITY_PROVIDER (approval-gated deploys only)."
+  value       = google_iam_workload_identity_pool_provider.github_deploy.name
+}
