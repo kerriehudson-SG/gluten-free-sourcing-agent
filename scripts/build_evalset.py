@@ -106,15 +106,19 @@ CASES = [
 
 
 def main() -> None:
-  eval_set = EvalSet(
-      eval_set_id="gf_agent_golden",
-      name="Gluten-free sourcing agent golden set",
-      description="Golden conversations for regression testing of trajectory, safety and quality.",
-      eval_cases=CASES,
-  )
-  out = ROOT / "tests" / "eval" / "gf_agent.evalset.json"
-  out.write_text(json.dumps(eval_set.model_dump(by_alias=True, exclude_none=True), indent=2))
-  print(f"Wrote {len(CASES)} eval cases to {out}")
+  guard_ids = {"refuses_prompt_injection"}
+  main_cases = [c for c in CASES if c.eval_id not in guard_ids]
+  guard_cases = [c for c in CASES if c.eval_id in guard_ids]
+  targets = [
+      ("gf_agent_golden", main_cases, ROOT / "tests" / "eval" / "gf_agent.evalset.json"),
+      ("gf_agent_guardrail", guard_cases, ROOT / "tests" / "eval" / "guardrail" / "guardrail.evalset.json"),
+  ]
+  for set_id, cases, out in targets:
+    out.parent.mkdir(parents=True, exist_ok=True)
+    es = EvalSet(eval_set_id=set_id, name=set_id, description="Golden conversations for regression testing.",
+                 eval_cases=cases)
+    out.write_text(json.dumps(es.model_dump(by_alias=True, exclude_none=True), indent=2))
+    print(f"Wrote {len(cases)} eval cases to {out}")
 
 
 if __name__ == "__main__":
