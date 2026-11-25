@@ -40,3 +40,4 @@ htmlcov/
 
 # Agents CLI eval artifacts
 artifacts/
+tfplan
