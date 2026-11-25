@@ -72,6 +72,7 @@ echo "== Stage 6: add these as GitHub repository VARIABLES (Settings > Secrets a
 echo "GCP_PROJECT_ID=${PROJECT_ID}"
 echo "GCP_REGION=${REGION}"
 echo "GCP_WORKLOAD_IDENTITY_PROVIDER=$(terraform -chdir="${TF_DIR}" output -raw workload_identity_provider)"
+echo "GCP_DEPLOY_WORKLOAD_IDENTITY_PROVIDER=$(terraform -chdir="${TF_DIR}" output -raw deploy_workload_identity_provider)"
 echo "GCP_CI_SERVICE_ACCOUNT=$(terraform -chdir="${TF_DIR}" output -raw ci_eval_service_account)"
 echo "GCP_DEPLOY_SERVICE_ACCOUNT=$(terraform -chdir="${TF_DIR}" output -raw deployer_service_account)"
 echo "GCP_RUNTIME_SERVICE_ACCOUNT=$(terraform -chdir="${TF_DIR}" output -raw runtime_service_account)"
