@@ -21,6 +21,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+  "google-adk[eval]>=2.15,<3",  # ADK evaluation framework (adk eval / AgentEvaluator)
   "pytest>=9.2",
   "pytest-asyncio>=1.5",
   "ruff>=0.17",

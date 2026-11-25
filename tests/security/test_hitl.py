@@ -101,3 +101,23 @@ def test_region_must_not_be_an_address():
       retailer_id="au-costco", lines=[{"product_id": "au-p3", "packs": 1}],
       group_size=2, organiser_region="12 Smith Street 3000")
   assert r["error_code"] == "INVALID_REGION"
+
+
+def test_approved_purchase_returns_confirmation_directly():
+  from gf_agent.tools.actions import submit_group_purchase_request
+
+  class Actions:
+    skip_summarization = False
+
+  class Ctx:
+    def __init__(self):
+      self.state = {}
+      self.actions = Actions()
+
+  ctx = Ctx()
+  r = submit_group_purchase_request(
+      retailer_id="au-costco", lines=[{"product_id": "au-p3", "packs": 6}],
+      group_size=6, organiser_region="Melbourne", tool_context=ctx)
+  assert r["state"] == "DRAFT_AWAITING_ORGANISER"
+  assert ctx.actions.skip_summarization is True
+  assert ctx.state["group_purchase_drafts"][0]["draft_id"] == r["draft_id"]
